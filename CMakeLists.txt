@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(polyedit)
+find_package(Curses REQUIRED)
+include_directories(${CURSES_INCLUDE_DIR})
+include_directories("./src")
 add_executable(PolyEdit src/editor.cpp)
-
+target_link_libraries(PolyEdit ${CURSES_LIBRARY})
