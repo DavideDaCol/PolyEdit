@@ -1,6 +1,8 @@
+#include <iostream>
 #include <ncurses.h>
 #include <fstream>
 #include <cstring>
+#include <string>
 using namespace std;
 
 int main(int argc, char** argv){
@@ -24,13 +26,20 @@ int main(int argc, char** argv){
     buff=getch();
   } while(buff!='i');
 
+  clear();
+
   fstream in,out;
 
   if(argc == 2 ){ // gets file path
+    int rows=0, cols=0;
+    string buffer;
     in.open(argv[1],ios::in);
-    out.open(argv[1],ios::out);
+    while(getline(in,buffer)){
+      addstr(buffer.c_str());
+      rows++;
+      move(rows,0);
+    } 
   } else out.open("noname.txt",ios::out);
-  clear();
   getch(); // waits for a keypress to exit
   endwin(); //deallocates memory!
   return 0;
