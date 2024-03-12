@@ -6,6 +6,8 @@
 #include <string>
 using namespace std;
 
+int printAndLoadBuffer(int argc, char* filename, vector < string > file, fstream &in, fstream &out);
+
 int main(int argc, char** argv){
   initscr();
   cbreak();
@@ -31,11 +33,17 @@ int main(int argc, char** argv){
   clear();
 
   fstream in,out;
+  int rows = printAndLoadBuffer(argc,argv[1],file,in,out);
+  getch(); // waits for a keypress to exit
+  endwin(); //deallocates memory!
+  return 0;
+}
 
+int printAndLoadBuffer(int argc, char* filename, vector < string > file, fstream &in, fstream &out){
+  int rows=0;
   if(argc == 2 ){ // gets file path
-    int rows=0;
     string buffer;
-    in.open(argv[1],ios::in);
+    in.open(filename,ios::in);
     while(getline(in,buffer)){
       addstr(buffer.c_str()); // ncurses wants c strings
       file.push_back(buffer); // loads modifier buffer
@@ -43,7 +51,5 @@ int main(int argc, char** argv){
       move(rows,0);
     }
   } else out.open("noname.txt",ios::out);
-  getch(); // waits for a keypress to exit
-  endwin(); //deallocates memory!
-  return 0;
+  return rows;
 }
