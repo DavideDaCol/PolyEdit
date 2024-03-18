@@ -4,16 +4,25 @@
 #include <cstring>
 #include <vector>
 #include <string>
+
+//TODO: verify behavior: doesn't match online sources
+#define KEYUP 3
+#define KEYDOWN 2
+#define KEYRIGHT 5
+#define KEYLEFT 4
+
 using namespace std;
 
 int printAndLoadBuffer(int argc, char* filename, vector < string > file, fstream &in, fstream &out);
+bool isDirection(char buff);
 
 int main(int argc, char** argv){
   initscr();
   cbreak();
   noecho();
+  keypad(stdscr, TRUE);
 
-  int x=0, y=0;
+  int x=0, y=0, xcurr=0, ycurr=0;
   vector < string > file {};
   getmaxyx(stdscr, y, x); // term size
   refresh();
@@ -34,7 +43,41 @@ int main(int argc, char** argv){
 
   fstream in,out;
   int rows = printAndLoadBuffer(argc,argv[1],file,in,out);
-  getch(); // waits for a keypress to exit
+  do{
+    buff=getch();
+    if(isDirection(buff)){ // TODO: move direction into dedicated function or file
+      switch (buff) //if the input is an arrow key, move cursor (if in bounds)
+      {
+      case KEYUP:
+        if(ycurr>0){
+          --ycurr;
+        }
+        break;
+      case KEYDOWN:
+        if(ycurr<rows){
+          ++ycurr;
+        }
+        break;
+      case KEYLEFT:
+        if(xcurr>0){
+          xcurr--;
+        }
+        break;
+      case KEYRIGHT:
+        if(xcurr<x){
+          xcurr++;
+        }
+        break;
+      
+      default:
+        break;
+      }
+      wmove(stdscr,ycurr,xcurr);
+      wrefresh(stdscr);
+    } else {
+      // edit file contents
+    }
+  } while(buff!=':'); 
   endwin(); //deallocates memory!
   return 0;
 }
@@ -52,4 +95,11 @@ int printAndLoadBuffer(int argc, char* filename, vector < string > file, fstream
     }
   } else out.open("noname.txt",ios::out);
   return rows;
+}
+
+bool isDirection(char buff){
+  int calc = int(buff); //can probably get rid of this
+  if(calc==KEYUP||calc==KEYDOWN||calc==KEYLEFT||calc==KEYRIGHT){
+    return true;
+  } else return false;
 }
