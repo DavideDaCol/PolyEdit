@@ -15,8 +15,8 @@ using namespace std;
 
 vector < string > printAndLoadBuffer(int argc, char* filename, vector < string > file, int &rows, fstream &in, fstream &out, fstream &err);
 bool isDirection(char buff);
-void arrowMove(char dir,WINDOW* window, int &xcurr, int &ycurr, int x, int y, int rows);
-vector < string > fileEdit(char edit, vector < string > file, int &xcurr, int &ycurr, int rows, fstream &err);
+void arrowMove(char dir,WINDOW* window, vector < string > file, int &xcurr, int &ycurr, int x, int y, int rows);
+vector < string > fileEdit(char edit, vector < string > file, int &xcurr, int &ycurr, int &rows, fstream &err);
 
 int main(int argc, char** argv){
   initscr();
@@ -51,7 +51,7 @@ int main(int argc, char** argv){
   do{
     buff=getch();
     if(isDirection(buff)){ // TODO: move direction into dedicated function or file
-       arrowMove(buff,stdscr,xcurr,ycurr,x,y,rows);//if the input is an arrow key, move cursor (if in bounds)
+       arrowMove(buff,stdscr,mod,xcurr,ycurr,x,y,rows);//if the input is an arrow key, move cursor (if in bounds)
     } else {
       mod = fileEdit(buff,mod,xcurr,ycurr,rows,err);
     }
@@ -90,17 +90,23 @@ bool isDirection(char buff){
   } else return false;
 }
 
-void arrowMove(char dir,WINDOW* window, int &xcurr, int &ycurr, int x, int y, int rows){
+void arrowMove(char dir,WINDOW* window, vector < string > file, int &xcurr, int &ycurr, int x, int y, int rows){
   switch (dir) //if the input is an arrow key, move cursor (if in bounds)
       {
       case KEYUP:
         if(ycurr>0){
           --ycurr;
+          if(xcurr>file[ycurr].length()){ // wraps cursor to the end of the line
+            xcurr=file[ycurr].length()-1;
+          }
         }
         break;
       case KEYDOWN:
-        if(ycurr<rows){
+        if(ycurr<rows-1){
           ++ycurr;
+          if(xcurr>file[ycurr].length()){ //same as KEYUP
+            xcurr=file[ycurr].length()-1;
+          }
         }
         break;
       case KEYLEFT:
@@ -109,7 +115,7 @@ void arrowMove(char dir,WINDOW* window, int &xcurr, int &ycurr, int x, int y, in
         }
         break;
       case KEYRIGHT:
-        if(xcurr<x){
+        if(xcurr<file[ycurr].length()){ 
           xcurr++;
         }
         break;
@@ -121,29 +127,37 @@ void arrowMove(char dir,WINDOW* window, int &xcurr, int &ycurr, int x, int y, in
       wrefresh(window);
 }
 
-vector < string > fileEdit(char edit,  vector < string > file, int &xcurr, int &ycurr, int rows, fstream &err){
-switch (edit)
-{
-case '\n':
-  //TODO: add newline implementation (need to add rows as parameter)
-  break;
+vector < string > fileEdit(char edit,  vector < string > file, int &xcurr, int &ycurr, int &rows, fstream &err){
+  switch (edit)
+  {
+    case '\n':
+      //TODO: add newline implementation (need to add rows as parameter)
+    break;
 
-case 7:
-  if(xcurr>0){
-    xcurr--;
-    file[ycurr].erase(xcurr,1);
-    mvdelch(ycurr,xcurr);
+    case 7: //backspace in cooked mode
+      if(xcurr>0){ //moves cursor and erases the character under the cursor
+        xcurr--;
+        file[ycurr].erase(xcurr,1);
+        mvdelch(ycurr,xcurr);
+        refresh();
+      } else { // edge case: need to go up one line
+        string temp = file[ycurr];
+        file.erase(file.begin()+ycurr);
+        rows--;
+        ycurr--;
+        file[ycurr].append(temp);
+        deleteln();
+        mvaddstr(ycurr,xcurr,file[ycurr].c_str());
+      }
+    break;
+
+    default: //if normal charachter, add first to the file in corresponding line and then to the screen
+    file[ycurr].insert(xcurr,1,edit);
+    insch(edit);
+    xcurr++;
+    move(ycurr,xcurr);
     refresh();
+    break;
   }
-  break;
-
-default:
-  file[ycurr].insert(xcurr,1,edit);
-  insch(edit);
-  xcurr++;
-  move(ycurr,xcurr);
-  refresh();
-  break;
-}
-return file;
+  return file;
 }
