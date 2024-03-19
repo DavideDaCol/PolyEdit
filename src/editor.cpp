@@ -13,9 +13,10 @@
 
 using namespace std;
 
-int printAndLoadBuffer(int argc, char* filename, vector < string > file, fstream &in, fstream &out);
+vector < string > printAndLoadBuffer(int argc, char* filename, vector < string > file, int &rows, fstream &in, fstream &out, fstream &err);
 bool isDirection(char buff);
 void arrowMove(char dir,WINDOW* window, int &xcurr, int &ycurr, int x, int y, int rows);
+vector < string > fileEdit(char edit, vector < string > file, int &xcurr, int &ycurr, int rows, fstream &err);
 
 int main(int argc, char** argv){
   initscr();
@@ -23,7 +24,7 @@ int main(int argc, char** argv){
   noecho();
   keypad(stdscr, TRUE);
 
-  int x=0, y=0, xcurr=0, ycurr=0;
+  int x=0, y=0, xcurr=0, ycurr=0, finiter=0;
   vector < string > file {};
   getmaxyx(stdscr, y, x); // term size
   refresh();
@@ -42,22 +43,32 @@ int main(int argc, char** argv){
 
   clear();
 
-  fstream in,out;
-  int rows = printAndLoadBuffer(argc,argv[1],file,in,out);
+  fstream in,out,err;
+  err.open("log.txt",ios::out);
+  int rows = 0;
+  vector < string > mod = printAndLoadBuffer(argc,argv[1],file,rows,in,out,err);
+  move(0,0);
   do{
     buff=getch();
     if(isDirection(buff)){ // TODO: move direction into dedicated function or file
        arrowMove(buff,stdscr,xcurr,ycurr,x,y,rows);//if the input is an arrow key, move cursor (if in bounds)
     } else {
-      // edit file contents
+      mod = fileEdit(buff,mod,xcurr,ycurr,rows,err);
     }
-  } while(buff!=':'); 
+  } while(buff!=':');
+  string final;
+  if(argc == 2){
+      out.open(argv[1],ios::out);
+    }
+  for (int i=0; i<rows; i++){
+    out << mod[i];
+    out << endl;
+  }
   endwin(); //deallocates memory!
   return 0;
 }
 
-int printAndLoadBuffer(int argc, char* filename, vector < string > file, fstream &in, fstream &out){
-  int rows=0;
+vector < string > printAndLoadBuffer(int argc, char* filename, vector < string > file, int &rows, fstream &in, fstream &out, fstream &err){
   if(argc == 2 ){ // gets file path
     string buffer;
     in.open(filename,ios::in);
@@ -67,8 +78,9 @@ int printAndLoadBuffer(int argc, char* filename, vector < string > file, fstream
       rows++;
       move(rows,0);
     }
+    in.close();
   } else out.open("noname.txt",ios::out);
-  return rows;
+  return file;
 }
 
 bool isDirection(char buff){
@@ -107,4 +119,31 @@ void arrowMove(char dir,WINDOW* window, int &xcurr, int &ycurr, int x, int y, in
       }
       wmove(window,ycurr,xcurr);
       wrefresh(window);
+}
+
+vector < string > fileEdit(char edit,  vector < string > file, int &xcurr, int &ycurr, int rows, fstream &err){
+switch (edit)
+{
+case '\n':
+  //TODO: add newline implementation (need to add rows as parameter)
+  break;
+
+case 7:
+  if(xcurr>0){
+    xcurr--;
+    file[ycurr].erase(xcurr,1);
+    mvdelch(ycurr,xcurr);
+    refresh();
+  }
+  break;
+
+default:
+  file[ycurr].insert(xcurr,1,edit);
+  insch(edit);
+  xcurr++;
+  move(ycurr,xcurr);
+  refresh();
+  break;
+}
+return file;
 }

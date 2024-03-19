@@ -36,3 +36,6 @@ build/
 
 # Text files
 *.txt
+
+# VScode stuff
+.vscode/
