@@ -15,6 +15,7 @@ using namespace std;
 
 int printAndLoadBuffer(int argc, char* filename, vector < string > file, fstream &in, fstream &out);
 bool isDirection(char buff);
+void arrowMove(char dir,WINDOW* window, int &xcurr, int &ycurr, int x, int y, int rows);
 
 int main(int argc, char** argv){
   initscr();
@@ -46,34 +47,7 @@ int main(int argc, char** argv){
   do{
     buff=getch();
     if(isDirection(buff)){ // TODO: move direction into dedicated function or file
-      switch (buff) //if the input is an arrow key, move cursor (if in bounds)
-      {
-      case KEYUP:
-        if(ycurr>0){
-          --ycurr;
-        }
-        break;
-      case KEYDOWN:
-        if(ycurr<rows){
-          ++ycurr;
-        }
-        break;
-      case KEYLEFT:
-        if(xcurr>0){
-          xcurr--;
-        }
-        break;
-      case KEYRIGHT:
-        if(xcurr<x){
-          xcurr++;
-        }
-        break;
-      
-      default:
-        break;
-      }
-      wmove(stdscr,ycurr,xcurr);
-      wrefresh(stdscr);
+       arrowMove(buff,stdscr,xcurr,ycurr,x,y,rows);//if the input is an arrow key, move cursor (if in bounds)
     } else {
       // edit file contents
     }
@@ -102,4 +76,35 @@ bool isDirection(char buff){
   if(calc==KEYUP||calc==KEYDOWN||calc==KEYLEFT||calc==KEYRIGHT){
     return true;
   } else return false;
+}
+
+void arrowMove(char dir,WINDOW* window, int &xcurr, int &ycurr, int x, int y, int rows){
+  switch (dir) //if the input is an arrow key, move cursor (if in bounds)
+      {
+      case KEYUP:
+        if(ycurr>0){
+          --ycurr;
+        }
+        break;
+      case KEYDOWN:
+        if(ycurr<rows){
+          ++ycurr;
+        }
+        break;
+      case KEYLEFT:
+        if(xcurr>0){
+          xcurr--;
+        }
+        break;
+      case KEYRIGHT:
+        if(xcurr<x){
+          xcurr++;
+        }
+        break;
+      
+      default:
+        break;
+      }
+      wmove(window,ycurr,xcurr);
+      wrefresh(window);
 }
